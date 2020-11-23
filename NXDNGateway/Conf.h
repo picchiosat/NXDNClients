@@ -71,6 +71,7 @@ public:
   unsigned int getLogFileLevel() const;
   std::string  getLogFilePath() const;
   std::string  getLogFileRoot() const;
+  bool         getLogFileRotate() const;
 
   // The Network section
   unsigned int   getNetworkPort() const;
@@ -81,8 +82,9 @@ public:
   unsigned int   getNetworkParrotPort() const;
   std::string    getNetworkNXDN2DMRAddress() const;
   unsigned int   getNetworkNXDN2DMRPort() const;
-  unsigned short getNetworkStartup() const;
-  unsigned int   getNetworkInactivityTimeout() const;
+  std::vector<unsigned short> getNetworkStatic() const;
+  unsigned int   getNetworkRFHangTime() const;
+  unsigned int   getNetworkNetHangTime() const;
   bool           getNetworkDebug() const;
 
   // The GPSD section
@@ -125,6 +127,7 @@ private:
   unsigned int m_logFileLevel;
   std::string  m_logFilePath;
   std::string  m_logFileRoot;
+  bool         m_logFileRotate;
 
   bool         m_aprsEnabled;
   std::string  m_aprsAddress;
@@ -140,8 +143,9 @@ private:
   unsigned int   m_networkParrotPort;
   std::string    m_networkNXDN2DMRAddress;
   unsigned int   m_networkNXDN2DMRPort;
-  unsigned short m_networkStartup;
-  unsigned int   m_networkInactivityTimeout;
+  std::vector<unsigned short> m_networkStatic;
+  unsigned int   m_networkRFHangTime;
+  unsigned int   m_networkNetHangTime;
   bool           m_networkDebug;
 
   bool         m_gpsdEnabled;

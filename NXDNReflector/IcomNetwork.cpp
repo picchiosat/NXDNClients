@@ -30,12 +30,14 @@ const unsigned int ICOM_PORT = 41300U;
 
 CIcomNetwork::CIcomNetwork(const std::string& address, bool debug) :
 m_socket(ICOM_PORT),
-m_address(),
+m_addr(),
+m_addrLen(0U),
 m_debug(debug)
 {
 	assert(!address.empty());
 
-	m_address = CUDPSocket::lookup(address);
+	if (CUDPSocket::lookup(address, ICOM_PORT, m_addr, m_addrLen) != 0)
+		m_addrLen = 0U;
 }
 
 CIcomNetwork::~CIcomNetwork()
@@ -44,12 +46,14 @@ CIcomNetwork::~CIcomNetwork()
 
 bool CIcomNetwork::open()
 {
+	if (m_addrLen == 0U) {
+		LogError("Unable to resolve the address of the Icom network");
+		return false;
+	}
+
 	LogMessage("Opening Icom network connection");
 
-	if (m_address.s_addr == INADDR_NONE)
-		return false;
-
-	return m_socket.open();
+	return m_socket.open(m_addr);
 }
 
 bool CIcomNetwork::write(const unsigned char* data, unsigned int len)
@@ -83,22 +87,22 @@ bool CIcomNetwork::write(const unsigned char* data, unsigned int len)
 	if (m_debug)
 		CUtils::dump(1U, "Icom Network Data Sent", buffer, 102U);
 
-	return m_socket.write(buffer, 102U, m_address, ICOM_PORT);
+	return m_socket.write(buffer, 102U, m_addr, m_addrLen);
 }
 
 unsigned int CIcomNetwork::read(unsigned char* data)
 {
 	unsigned char buffer[BUFFER_LENGTH];
 
-	in_addr address;
-	unsigned int port;
-	int length = m_socket.read(buffer, BUFFER_LENGTH, address, port);
+	sockaddr_storage addr;
+	unsigned int addrLen;
+	int length = m_socket.read(buffer, BUFFER_LENGTH, addr, addrLen);
 	if (length <= 0)
 		return 0U;
 
 	// Check if the data is for us
-	if (m_address.s_addr != address.s_addr || port != ICOM_PORT) {
-		LogMessage("Icom packet received from an invalid source, %08X != %08X and/or %u != %u", m_address.s_addr, address.s_addr, ICOM_PORT, port);
+	if (!CUDPSocket::match(m_addr, addr)) {
+		LogMessage("Icom packet received from an invalid source");
 		return 0U;
 	}
 

@@ -28,15 +28,16 @@ const unsigned int BUFFER_LENGTH = 200U;
 
 CIcomNetwork::CIcomNetwork(unsigned int localPort, const std::string& rptAddress, unsigned int rptPort, bool debug) :
 m_socket(localPort),
-m_address(),
-m_port(rptPort),
+m_addr(),
+m_addrLen(0U),
 m_debug(debug)
 {
 	assert(localPort > 0U);
 	assert(!rptAddress.empty());
 	assert(rptPort > 0U);
 
-	m_address = CUDPSocket::lookup(rptAddress);
+	if (CUDPSocket::lookup(rptAddress, rptPort, m_addr, m_addrLen) != 0)
+		m_addrLen = 0U;
 }
 
 CIcomNetwork::~CIcomNetwork()
@@ -45,12 +46,14 @@ CIcomNetwork::~CIcomNetwork()
 
 bool CIcomNetwork::open()
 {
+	if (m_addrLen == 0U) {
+		LogError("Unable to resolve the address of the Icom network");
+		return false;
+	}
+
 	LogMessage("Opening Icom connection");
 
-	if (m_address.s_addr == INADDR_NONE)
-		return false;
-
-	return m_socket.open();
+	return m_socket.open(m_addr);
 }
 
 bool CIcomNetwork::write(const unsigned char* data, unsigned int length)
@@ -84,7 +87,7 @@ bool CIcomNetwork::write(const unsigned char* data, unsigned int length)
 	if (m_debug)
 		CUtils::dump(1U, "Icom Data Sent", buffer, 102U);
 
-	return m_socket.write(buffer, 102U, m_address, m_port);
+	return m_socket.write(buffer, 102U, m_addr, m_addrLen);
 }
 
 unsigned int CIcomNetwork::read(unsigned char* data)
@@ -92,15 +95,15 @@ unsigned int CIcomNetwork::read(unsigned char* data)
 	assert(data != NULL);
 
 	unsigned char buffer[BUFFER_LENGTH];
-	in_addr address;
-	unsigned int port;
+	sockaddr_storage addr;
+	unsigned int addrlen;
 
-	int length = m_socket.read(buffer, BUFFER_LENGTH, address, port);
+	int length = m_socket.read(buffer, BUFFER_LENGTH, addr, addrlen);
 	if (length <= 0)
 		return 0U;
 
-	if (m_address.s_addr != address.s_addr || m_port != port) {
-		LogWarning("Icom Data received from an unknown address or port - %08X:%u", ntohl(address.s_addr), port);
+	if (!CUDPSocket::match(m_addr, addr)) {
+		LogWarning("Icom Data received from an unknown address or port");
 		return 0U;
 	}
 
@@ -114,7 +117,7 @@ unsigned int CIcomNetwork::read(unsigned char* data)
 		buffer[37U] = 0x02U;
 		buffer[38U] = 0x4FU;
 		buffer[39U] = 0x4BU;
-		m_socket.write(buffer, length, address, port);
+		m_socket.write(buffer, length, addr, addrlen);
 		return 0U;
 	}
 

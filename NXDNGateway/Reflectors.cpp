@@ -1,5 +1,5 @@
 /*
-*   Copyright (C) 2016,2018 by Jonathan Naylor G4KLX
+*   Copyright (C) 2016,2018,2020 by Jonathan Naylor G4KLX
 *
 *   This program is free software; you can redistribute it and/or modify
 *   it under the terms of the GNU General Public License as published by
@@ -78,16 +78,19 @@ bool CReflectors::load()
 			char* p3 = ::strtok(NULL,   " \t\r\n");
 
 			if (p1 != NULL && p2 != NULL && p3 != NULL) {
-				std::string host = std::string(p2);
+				std::string host  = std::string(p2);
+				unsigned int port = (unsigned int)::atoi(p3);
 
-				in_addr address = CUDPSocket::lookup(host);
-				if (address.s_addr != INADDR_NONE) {
+				sockaddr_storage addr;
+				unsigned int addrLen;
+				if (CUDPSocket::lookup(host, port, addr, addrLen) == 0) {
 					CNXDNReflector* refl = new CNXDNReflector;
 					refl->m_id      = (unsigned short)::atoi(p1);
-					refl->m_address = address;
-					refl->m_port    = (unsigned int)::atoi(p3);
-
+					refl->m_addr    = addr;
+					refl->m_addrLen = addrLen;
 					m_reflectors.push_back(refl);
+				} else {
+					LogWarning("Unable to resolve the address of %s", host.c_str());
 				}
 			}
 		}
@@ -110,16 +113,19 @@ bool CReflectors::load()
 				// Don't allow duplicate reflector ids from the secondary hosts file.
 				unsigned int id = (unsigned int)::atoi(p1);
 				if (find(id) == NULL) {
-					std::string host = std::string(p2);
+					std::string host  = std::string(p2);
+					unsigned int port = (unsigned int)::atoi(p3);
 
-					in_addr address = CUDPSocket::lookup(host);
-					if (address.s_addr != INADDR_NONE) {
+					sockaddr_storage addr;
+					unsigned int addrLen;
+					if (CUDPSocket::lookup(host, port, addr, addrLen) == 0) {
 						CNXDNReflector* refl = new CNXDNReflector;
 						refl->m_id      = id;
-						refl->m_address = address;
-						refl->m_port    = (unsigned int)::atoi(p3);
-
+						refl->m_addr    = addr;
+						refl->m_addrLen = addrLen;
 						m_reflectors.push_back(refl);
+					} else {
+						LogWarning("Unable to resolve the address of %s", host.c_str());
 					}
 				}
 			}
@@ -133,22 +139,34 @@ bool CReflectors::load()
 
 	// Add the Parrot entry
 	if (m_parrotPort > 0U) {
-		CNXDNReflector* refl = new CNXDNReflector;
-		refl->m_id      = 10U;
-		refl->m_address = CUDPSocket::lookup(m_parrotAddress);
-		refl->m_port    = m_parrotPort;
-		m_reflectors.push_back(refl);
-		LogInfo("Loaded NXDN parrot (TG%u)", refl->m_id);
+		sockaddr_storage addr;
+		unsigned int addrLen;
+		if (CUDPSocket::lookup(m_parrotAddress, m_parrotPort, addr, addrLen) == 0) {
+			CNXDNReflector* refl = new CNXDNReflector;
+			refl->m_id      = 10U;
+			refl->m_addr    = addr;
+			refl->m_addrLen = addrLen;
+			m_reflectors.push_back(refl);
+			LogInfo("Loaded NXDN parrot (TG%u)", refl->m_id);
+		} else {
+			LogWarning("Unable to resolve the address of the NXDN Parrot");
+		}
 	}
 
 	// Add the NXDN2DMR entry
 	if (m_nxdn2dmrPort > 0U) {
-		CNXDNReflector* refl = new CNXDNReflector;
-		refl->m_id      = 20U;
-		refl->m_address = CUDPSocket::lookup(m_nxdn2dmrAddress);
-		refl->m_port    = m_nxdn2dmrPort;
-		m_reflectors.push_back(refl);
-		LogInfo("Loaded NXDN2DMR reflector (TG%u)", refl->m_id);
+		sockaddr_storage addr;
+		unsigned int addrLen;
+		if (CUDPSocket::lookup(m_nxdn2dmrAddress, m_nxdn2dmrPort, addr, addrLen) == 0) {
+			CNXDNReflector* refl = new CNXDNReflector;
+			refl->m_id      = 20U;
+			refl->m_addr    = addr;
+			refl->m_addrLen = addrLen;
+			m_reflectors.push_back(refl);
+			LogInfo("Loaded NXDN2DMR (TG%u)", refl->m_id);
+		} else {
+			LogWarning("Unable to resolve the address of NXDN2DMR");
+		}
 	}
 
 	size = m_reflectors.size();

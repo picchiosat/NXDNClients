@@ -66,6 +66,7 @@ m_logDisplayLevel(0U),
 m_logFileLevel(0U),
 m_logFilePath(),
 m_logFileRoot(),
+m_logFileRotate(true),
 m_aprsEnabled(false),
 m_aprsAddress("127.0.0.1"),
 m_aprsPort(8673U),
@@ -79,8 +80,9 @@ m_networkParrotAddress("127.0.0.1"),
 m_networkParrotPort(0U),
 m_networkNXDN2DMRAddress("127.0.0.1"),
 m_networkNXDN2DMRPort(0U),
-m_networkStartup(9999U),
-m_networkInactivityTimeout(0U),
+m_networkStatic(),
+m_networkRFHangTime(120U),
+m_networkNetHangTime(60U),
 m_networkDebug(false),
 m_gpsdEnabled(false),
 m_gpsdAddress(),
@@ -139,6 +141,26 @@ bool CConf::read()
 		  continue;
 
 	  char* value = ::strtok(NULL, "\r\n");
+	  if (value == NULL)
+		  continue;
+
+	  // Remove quotes from the value
+	  size_t len = ::strlen(value);
+	  if (len > 1U && *value == '"' && value[len - 1U] == '"') {
+		  value[len - 1U] = '\0';
+		  value++;
+	  } else {
+		  char *p;
+
+		  // if value is not quoted, remove after # (to make comment)
+		  if ((p = strchr(value, '#')) != NULL)
+			  *p = '\0';
+
+		  // remove trailing tab/space
+		  for (p = value + strlen(value) - 1U; p >= value && (*p == '\t' || *p == ' '); p--)
+			  *p = '\0';
+	  }
+
 	  if (section == SECTION_GENERAL) {
 		  if (::strcmp(key, "Callsign") == 0) {
 			  // Convert the callsign to upper case
@@ -200,6 +222,8 @@ bool CConf::read()
 			  m_logFileLevel = (unsigned int)::atoi(value);
 		  else if (::strcmp(key, "DisplayLevel") == 0)
 			  m_logDisplayLevel = (unsigned int)::atoi(value);
+		  else if (::strcmp(key, "FileRotate") == 0)
+			  m_logFileRotate = ::atoi(value) ==  1;
 	  } else if (section == SECTION_APRS) {
 		  if (::strcmp(key, "Enable") == 0)
 			  m_aprsEnabled = ::atoi(value) == 1;
@@ -228,10 +252,17 @@ bool CConf::read()
 			  m_networkNXDN2DMRAddress = value;
 		  else if (::strcmp(key, "NXDN2DMRPort") == 0)
 			  m_networkNXDN2DMRPort = (unsigned int)::atoi(value);
-		  else if (::strcmp(key, "Startup") == 0)
-			  m_networkStartup = (unsigned short)::atoi(value);
-		  else if (::strcmp(key, "InactivityTimeout") == 0)
-			  m_networkInactivityTimeout = (unsigned int)::atoi(value);
+		  else if (::strcmp(key, "Static") == 0) {
+			  char* p = ::strtok(value, ",\r\n");
+			  while (p != NULL) {
+				  unsigned short tg = (unsigned short)::atoi(p);
+				  m_networkStatic.push_back(tg);
+				  p = ::strtok(NULL, ",\r\n");
+			  }
+		  } else if (::strcmp(key, "RFHangTime") == 0)
+			  m_networkRFHangTime = (unsigned int)::atoi(value);
+		  else if (::strcmp(key, "NetHangTime") == 0)
+			  m_networkNetHangTime = (unsigned int)::atoi(value);
 		  else if (::strcmp(key, "Debug") == 0)
 			  m_networkDebug = ::atoi(value) == 1;
 	  } else if (section == SECTION_GPSD) {
@@ -241,7 +272,7 @@ bool CConf::read()
 			  m_gpsdAddress = value;
 		  else if (::strcmp(key, "Port") == 0)
 			  m_gpsdPort = value;
-	  } else if (section == SECTION_REMOTE_COMMANDS) {
+	  }  else if (section == SECTION_REMOTE_COMMANDS) {
 		  if (::strcmp(key, "Enable") == 0)
 			  m_remoteCommandsEnabled = ::atoi(value) == 1;
 		  else if (::strcmp(key, "Port") == 0)
@@ -404,6 +435,11 @@ std::string CConf::getLogFileRoot() const
 	return m_logFileRoot;
 }
 
+bool CConf::getLogFileRotate() const
+{
+	return m_logFileRotate;
+}
+
 unsigned int CConf::getNetworkPort() const
 {
 	return m_networkPort;
@@ -444,14 +480,19 @@ unsigned int CConf::getNetworkNXDN2DMRPort() const
 	return m_networkNXDN2DMRPort;
 }
 
-unsigned short CConf::getNetworkStartup() const
+std::vector<unsigned short> CConf::getNetworkStatic() const
 {
-	return m_networkStartup;
+	return m_networkStatic;
 }
 
-unsigned int CConf::getNetworkInactivityTimeout() const
+unsigned int CConf::getNetworkRFHangTime() const
 {
-	return m_networkInactivityTimeout;
+	return m_networkRFHangTime;
+}
+
+unsigned int CConf::getNetworkNetHangTime() const
+{
+	return m_networkNetHangTime;
 }
 
 bool CConf::getNetworkDebug() const

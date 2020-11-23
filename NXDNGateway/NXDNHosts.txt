@@ -18,9 +18,6 @@
 # 302 P25 Canada
 302	p25canada.hopto.org	41400
 
-# 395 IT GRF Cluster
-395 80.211.99.134 41455
-
 # 420 Super Freq
 420 hb.superfreqdigital.com 41400
 
@@ -48,9 +45,6 @@
 # 2140 DMRplus BM Multi
 2140  94.177.235.81 41400
 
-# 21418 RC Veleta GR
-21418  rcveleta.xreflector.es 41400
-
 # 2225  IT Tuscany
 2225  80.211.99.134 41400
 
@@ -64,7 +58,10 @@
 2263	nxdn.dstar-yo.ro	41000
 
 # 2503 RU DMR
-2503 nxdn.r1ik.ru 41400
+2503  nxdn.r1ik.ru  41400
+
+# Melbourne FL
+2700  kp4oo.ddns.net  41400
 
 # 3023 Ontario Crosslink
 3023    ontxlink.hopto.org 41400
@@ -72,11 +69,17 @@
 # 3142 Pennsylvania
 3142 3.215.215.169 41402
 
+# PRadise
+3300  nxdn3300.from-pr.com  41400
+
 # 5057 VK7 TAS
 5057    45.248.50.37    41400
 
 # 7225 Multiprotocolo Argentina
 7225  ysfarg.ddns.net 41400
+
+# 9846 NXDN Portal to WW8GM YSF network www.gmarc.org 
+9846	nxdn.dudetronics.com	41401
 
 # 10200 North America
 10200   dvswitch.org    42400
@@ -96,6 +99,9 @@
 # Pacific, 10400
 10400	pacific.nxref.org	41400
 
+# 10922 CQ-UK
+10922	81.150.10.62	41400
+
 # 20000 Europe, German speaking
 20000	89.185.97.38	41400
 
@@ -113,6 +119,9 @@
 
 # 21418 NXDN RC Veleta
 21418 rcveleta.xreflector.es 41400
+
+# 21430 Alcayna
+21430 alcayna.duckdns.org 41400
 
 # 21465 ADER Multimode
 21465 aderdigital.ddns.net 41400
@@ -137,9 +146,6 @@
 
 # 22825 Swiss NXDN Reflerctor
 22825 212.237.33.114 41400
-
-# 23531 RayNet UK
-23531	51.91.78.118	41400
 
 # 23551 NXDN Scotland
 23551 nxdnscotland.ddns.net 41400
@@ -213,6 +219,9 @@
 # 31672 Pi-Star
 31672	nxdn-31672.pistar.uk	41400
 
+# 31769 MB6NG
+31769	reflector.mb6ng.uk	41400
+
 # 31777 DX-LINK SYSTEM,
 31777	8.9.4.102	41400
 
@@ -225,8 +234,11 @@
 # 33581 OMISS Group
 33581 omiss.dyndns.org  41400
 
+# 37224 Haiti NXDN
+37224 44.98.254.130 41400
+
 # 40721 Fusion Canada Fr /Wires-x /Ysf /Nxdn Network
-40721 38.110.97.161 41400
+40721 158.69.169.205 41400
 
 # 46000 China
 46000	120.234.41.144	41400

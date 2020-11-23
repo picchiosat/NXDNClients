@@ -29,7 +29,7 @@
 #include <arpa/inet.h>
 #include <errno.h>
 #else
-#include <winsock.h>
+#include <WS2tcpip.h>
 #endif
 
 #include <cstdint>
@@ -47,7 +47,7 @@ public:
 
 	virtual void close() = 0;
 
-    virtual void clock(unsigned int ms) = 0;
+	virtual void clock(unsigned int ms) = 0;
 
 private:
 };

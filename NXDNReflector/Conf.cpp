@@ -46,6 +46,7 @@ m_logDisplayLevel(0U),
 m_logFileLevel(0U),
 m_logFilePath(),
 m_logFileRoot(),
+m_logFileRotate(true),
 m_networkPort(0U),
 m_networkDebug(false),
 m_icomEnabled(false),
@@ -104,6 +105,26 @@ bool CConf::read()
 		  continue;
 
 	  char* value = ::strtok(NULL, "\r\n");
+	  if (value == NULL)
+		  continue;
+
+	  // Remove quotes from the value
+	  size_t len = ::strlen(value);
+	  if (len > 1U && *value == '"' && value[len - 1U] == '"') {
+		  value[len - 1U] = '\0';
+		  value++;
+	  } else {
+		  char *p;
+
+		  // if value is not quoted, remove after # (to make comment)
+		  if ((p = strchr(value, '#')) != NULL)
+			  *p = '\0';
+
+		  // remove trailing tab/space
+		  for (p = value + strlen(value) - 1U; p >= value && (*p == '\t' || *p == ' '); p--)
+			  *p = '\0';
+	  }
+
 	  if (section == SECTION_GENERAL) {
 		  if (::strcmp(key, "Daemon") == 0)
 			  m_daemon = ::atoi(value) == 1;
@@ -123,6 +144,8 @@ bool CConf::read()
 			  m_logFileLevel = (unsigned int)::atoi(value);
 		  else if (::strcmp(key, "DisplayLevel") == 0)
 			  m_logDisplayLevel = (unsigned int)::atoi(value);
+		  else if (::strcmp(key, "FileRotate") == 0)
+			  m_logFileRotate = ::atoi(value) == 1;
 	  } else if (section == SECTION_NETWORK) {
 		  if (::strcmp(key, "Port") == 0)
 			  m_networkPort = (unsigned int)::atoi(value);
@@ -196,6 +219,11 @@ std::string CConf::getLogFilePath() const
 std::string CConf::getLogFileRoot() const
 {
 	return m_logFileRoot;
+}
+
+bool CConf::getLogFileRotate() const
+{
+	return m_logFileRotate;
 }
 
 unsigned int CConf::getNetworkPort() const
